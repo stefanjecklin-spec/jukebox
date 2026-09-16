@@ -1,0 +1,1069 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#24140D">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Jukebox</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Bungee&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+:root{
+  --walnut-deep:#1F120B;
+  --oxblood:#6B1B26; --oxblood-deep:#3E0F16;
+  --chrome-hi:#F4F2EE; --chrome-mid:#BDB9B2; --chrome-lo:#6F6B66;
+  --amber:#FFB547; --amber-deep:#E07A1F;
+  --strip:#FBF2D5; --strip-rule:#C3282D; --ink:#2B1A12;
+  --cream:#F6E7C8; --muted:#C9AE84;
+  --f-display:'Bungee','Arial Black',Impact,sans-serif;
+  --f-strip:'Special Elite','Courier New',Courier,monospace;
+  --f-ui:'Barlow Condensed','Roboto Condensed','Arial Narrow',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overscroll-behavior:none}
+body{background:var(--walnut-deep);color:var(--cream);font-family:var(--f-ui);overflow:hidden;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+input{-webkit-user-select:text;user-select:text}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+[hidden]{display:none !important}
+
+/* ---------- Gehäuse ---------- */
+.cabinet{height:100vh;height:100dvh;display:grid;grid-template-columns:40px minmax(0,1fr) 40px;
+  grid-template-rows:auto minmax(0,1fr);gap:14px;padding:14px 14px 16px;
+  background:
+    radial-gradient(120% 70% at 50% 0%,rgba(255,181,71,.10),transparent 60%),
+    repeating-linear-gradient(92deg,rgba(0,0,0,.18) 0 1px,transparent 1px 6px,rgba(255,255,255,.025) 6px 7px,transparent 7px 13px),
+    linear-gradient(180deg,#4A2B1C,#2A170F)}
+
+.arch{grid-column:1/-1;touch-action:none;padding:6px;border-radius:50% 50% 12px 12px / 92px 92px 12px 12px;
+  background:linear-gradient(180deg,var(--chrome-hi),var(--chrome-mid) 45%,var(--chrome-lo) 72%,var(--chrome-hi));
+  box-shadow:0 6px 18px rgba(0,0,0,.5)}
+.arch-inner{border-radius:50% 50% 8px 8px / 88px 88px 8px 8px;padding:24px 24px 14px;text-align:center;overflow:hidden;
+  background:
+    repeating-conic-gradient(from -90deg at 50% 135%,rgba(255,255,255,.055) 0 3deg,transparent 3deg 9deg),
+    radial-gradient(90% 150% at 50% 115%,#92303C 0%,var(--oxblood) 45%,var(--oxblood-deep) 100%)}
+#title{font-family:var(--f-display);font-weight:400;font-size:clamp(28px,4.3vw,54px);line-height:1;margin:0;color:var(--cream);
+  letter-spacing:.02em;text-shadow:0 0 18px rgba(255,181,71,.55),0 2px 0 #7a4a12,0 3px 0 #4d2c09}
+#subtitle{margin:8px 0 0;font-size:clamp(15px,1.6vw,20px);font-weight:500;color:#F3D9A8;letter-spacing:.01em}
+
+/* Leuchtröhren */
+.tube{grid-row:2;position:relative;border-radius:20px;overflow:hidden;
+  background:linear-gradient(90deg,var(--chrome-lo),var(--chrome-hi) 40%,var(--chrome-mid) 60%,var(--chrome-lo));
+  box-shadow:0 4px 12px rgba(0,0,0,.5)}
+.tube.left{grid-column:1}.tube.right{grid-column:3}
+.tube::before{content:"";position:absolute;inset:4px;border-radius:16px;
+  background:linear-gradient(180deg,#FF5E3A 0%,#FFB547 17%,#FFE38F 33%,#86D9B9 50%,#3FA3C8 66%,#C94B6A 83%,#FF5E3A 100%);
+  background-size:100% 200%;animation:flow 16s linear infinite;box-shadow:0 0 22px rgba(255,160,70,.55)}
+.tube::after{content:"";position:absolute;top:4px;bottom:4px;left:26%;width:22%;border-radius:10px;
+  background:linear-gradient(90deg,rgba(255,255,255,.55),rgba(255,255,255,0))}
+.tube i{position:absolute;left:50%;top:100%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;
+  background:rgba(255,255,255,.8);z-index:1;animation:rise 8s linear infinite}
+.tube i:nth-child(2){left:38%;width:5px;height:5px;animation-delay:-1.7s;animation-duration:9.5s}
+.tube i:nth-child(3){left:60%;animation-delay:-3.9s}
+.tube i:nth-child(4){left:45%;width:4px;height:4px;animation-delay:-5.2s;animation-duration:10s}
+.tube i:nth-child(5){left:56%;width:6px;height:6px;animation-delay:-6.8s;animation-duration:7.5s}
+@keyframes flow{from{background-position:0 0}to{background-position:0 200%}}
+@keyframes rise{0%{top:100%;opacity:0}10%{opacity:.9}100%{top:-8px;opacity:.2}}
+
+/* ---------- Innenleben ---------- */
+.body{grid-column:2;grid-row:2;display:grid;grid-template-columns:minmax(290px,31%) minmax(0,1fr);gap:14px;min-height:0;position:relative}
+.panel{min-height:0;border-radius:14px;padding:14px;background:linear-gradient(180deg,#2A1611,#1B0E0A);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),0 0 0 3px #9b978f,0 0 0 5px #3c3834,0 8px 20px rgba(0,0,0,.45)}
+
+.window{display:flex;flex-direction:column;gap:12px;min-width:0}
+.now{display:grid;grid-template-columns:128px minmax(0,1fr);gap:14px;align-items:center}
+.record-wrap{position:relative;width:128px;aspect-ratio:1}
+.record{position:absolute;inset:0;border-radius:50%;display:grid;place-items:center;
+  background:repeating-radial-gradient(circle at 50% 50%,#121212 0 1px,#202020 1px 3px);
+  box-shadow:0 0 0 2px #000,0 6px 14px rgba(0,0,0,.6);animation:spin 3.4s linear infinite;animation-play-state:paused}
+.record.playing{animation-play-state:running}
+.record-wrap::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  background:conic-gradient(from 20deg,transparent 0 40deg,rgba(255,255,255,.13) 55deg,transparent 70deg 220deg,rgba(255,255,255,.08) 235deg,transparent 250deg)}
+.label{width:46%;aspect-ratio:1;border-radius:50%;background:var(--strip-rule) center/cover;box-shadow:0 0 0 3px #2b0d0d;position:relative}
+.label::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px;border-radius:50%;background:#161616}
+@keyframes spin{to{transform:rotate(360deg)}}
+#nowKicker{margin:0 0 4px;font-size:16px;color:var(--amber);font-weight:600}
+#nowTitle{margin:0;font-family:var(--f-strip);font-weight:400;font-size:21px;line-height:1.2;color:var(--cream);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#nowArtist{margin:4px 0 10px;font-size:17px;color:#D9BF95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prog{height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}
+#progBar{height:100%;width:0;background:linear-gradient(90deg,var(--amber-deep),var(--amber))}
+.times{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
+
+.queue{min-height:0;flex:1;display:flex;flex-direction:column;border-top:1px solid rgba(255,255,255,.08);padding-top:10px}
+.queue h3{margin:0 0 6px;font-size:21px;font-weight:700;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.queue h3 span{font-size:16px;font-weight:500;color:var(--muted)}
+#queue{list-style:none;margin:0;padding:0;overflow-y:auto;min-height:0;counter-reset:q;overscroll-behavior:contain}
+#queue li{display:grid;grid-template-columns:24px 42px minmax(0,1fr);gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+#queue li::before{counter-increment:q;content:counter(q);font-size:19px;font-weight:700;color:var(--amber);text-align:right}
+.qc{width:42px;height:42px;border-radius:3px;background:#4a3328 center/cover}
+.qt{display:block;font-size:18px;font-weight:600;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qa{display:block;font-size:15px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qx{display:block;min-width:0}
+#queue.compact li{grid-template-columns:24px minmax(0,1fr);gap:8px;padding:3px 0}
+#queue.compact li::before{font-size:17px}
+#queue.compact .qc{display:none}
+#queue.compact .qx{display:flex;align-items:baseline;gap:8px}
+#queue.compact .qt{flex:0 1 auto;font-size:17px}
+#queue.compact .qa{flex:1 1 0;font-size:15px}
+.empty{color:var(--muted);font-size:18px;line-height:1.35;padding:6px 0;margin:0}
+
+.picker{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;gap:12px}
+.picker-top{display:flex;gap:12px;align-items:center}
+.tabs{display:flex;gap:8px;overflow-x:auto;flex:1 1 auto;min-width:0;scrollbar-width:none;padding:3px 2px 5px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;border:0;border-radius:999px;padding:9px 18px;font-size:19px;font-weight:600;color:var(--ink);
+  background:linear-gradient(180deg,#F4F2EE,#BDB9B2 60%,#9a968f);box-shadow:inset 0 -2px 0 rgba(0,0,0,.25),0 2px 4px rgba(0,0,0,.4)}
+.tab[aria-selected="true"]{background:linear-gradient(180deg,#FFD58A,var(--amber) 55%,var(--amber-deep));
+  box-shadow:0 0 14px rgba(255,181,71,.55),inset 0 -2px 0 rgba(0,0,0,.2)}
+.search{flex:0 1 340px;min-width:200px;display:flex;align-items:center;gap:8px;background:var(--strip);border-radius:999px;padding:0 16px;height:48px;color:var(--ink)}
+.search svg{flex:none}
+.search input{flex:1;border:0;background:transparent;font:500 20px var(--f-ui);color:var(--ink);outline:none;min-width:0;height:100%}
+.search input::placeholder{color:#8a7560}
+.search:focus-within{box-shadow:0 0 0 3px var(--amber)}
+.search button{border:0;background:none;padding:6px;font-size:22px;line-height:1;color:#7a6050}
+
+.grid-wrap{overflow-y:auto;min-height:0;border-radius:8px;padding:12px;overscroll-behavior:contain;
+  background:linear-gradient(180deg,rgba(0,0,0,.38),rgba(0,0,0,.18));box-shadow:inset 0 2px 10px rgba(0,0,0,.6)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.strip{appearance:none;border:0;text-align:left;display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:center;
+  padding:9px 12px 9px 9px;border-radius:3px;background:var(--strip);color:var(--ink);position:relative;min-height:74px;
+  box-shadow:0 2px 0 rgba(0,0,0,.35);transition:transform .08s ease-out}
+.strip:active{transform:translateY(1px) scale(.985)}
+.cv{width:52px;height:52px;border-radius:2px;background:#d9c9a3 center/cover;display:grid;place-items:center;font:700 20px var(--f-ui);color:rgba(255,255,255,.9)}
+.strip .t{font-family:var(--f-strip);font-size:17px;line-height:1.18;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.strip .r{display:block;height:2px;background:var(--strip-rule);margin:5px 0 4px}
+.strip .a{display:block;font-size:16px;font-weight:600;color:#7A3F2B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.strip.on{background:#FFE3A3}
+.badge{position:absolute;top:-8px;right:8px;background:var(--strip-rule);color:#fff;font-size:14px;font-weight:700;padding:1px 9px;border-radius:999px}
+.sect{margin:20px 2px 10px;font-size:21px;font-weight:700;color:var(--cream)}
+.note{font-size:20px;color:#D9BF95;padding:28px 10px;text-align:center;line-height:1.4;margin:0}
+.remote-cta{display:flex;justify-content:center;padding:18px 0 6px}
+
+.plate{display:flex;align-items:center;justify-content:center;gap:10px;min-height:46px;border-radius:8px;padding:4px 12px;text-align:center;
+  background:linear-gradient(180deg,#ECE9E3,#B7B3AC 55%,#8D8983);color:var(--ink);font-size:20px;font-weight:700;
+  box-shadow:inset 0 1px 0 #fff,0 2px 6px rgba(0,0,0,.4)}
+.lamp{flex:none;width:14px;height:14px;border-radius:50%;background:#4fbf7f;box-shadow:0 0 10px #4fbf7f}
+.plate.wait .lamp{background:var(--amber);box-shadow:0 0 10px var(--amber)}
+.plate.stop .lamp{background:#e0473f;box-shadow:0 0 10px #e0473f}
+
+.paused{position:absolute;inset:0;z-index:5;display:grid;place-items:center;text-align:center;padding:30px;border-radius:14px;background:rgba(20,10,6,.9)}
+.paused h2{font-family:var(--f-display);font-weight:400;font-size:36px;margin:0 0 10px;color:var(--cream)}
+.paused p{font-size:22px;color:#D9BF95;margin:0;max-width:34ch}
+
+/* ---------- Buttons ---------- */
+.btn{border:0;border-radius:999px;padding:12px 22px;font-size:20px;font-weight:700;color:var(--ink);
+  background:linear-gradient(180deg,#F4F2EE,#BDB9B2 60%,#9a968f);box-shadow:inset 0 -3px 0 rgba(0,0,0,.2),0 2px 5px rgba(0,0,0,.35)}
+.btn.amber{background:linear-gradient(180deg,#FFD58A,var(--amber) 55%,var(--amber-deep))}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.55;cursor:default}
+
+/* ---------- Auswahl-Dialog ---------- */
+.modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:20px;background:rgba(15,8,5,.74)}
+.sheet{width:min(660px,100%);background:var(--strip);color:var(--ink);border-radius:6px;padding:22px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:22px;
+  box-shadow:0 0 0 6px #BDB9B2,0 0 0 8px #5c5853,0 24px 60px rgba(0,0,0,.6);animation:pop .18s ease-out}
+.big{width:220px;aspect-ratio:1;border-radius:3px;background:#d9c9a3 center/cover;display:grid;place-items:center;font:700 64px var(--f-ui);color:rgba(255,255,255,.9)}
+.sheet h2{font-family:var(--f-strip);font-weight:400;font-size:29px;line-height:1.15;margin:0}
+.sheet .r{height:3px;background:var(--strip-rule);margin:10px 0}
+.sheet .a{font-size:22px;font-weight:600;color:#7A3F2B;margin:0}
+.sheet .meta{font-size:18px;color:#6a5646;margin:6px 0 0}
+.sheet .msg{font-size:20px;margin:14px 0 0;line-height:1.35;color:#9b1c1c;font-weight:600}
+.acts{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.done{grid-column:1/-1;text-align:center;padding:16px 10px}
+.done h2{font-family:var(--f-display);font-size:48px;margin:0 0 8px;color:var(--strip-rule)}
+.done p{font-size:24px;margin:0;font-weight:600}
+@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
+
+/* ---------- PIN ---------- */
+.pin{width:min(360px,100%);background:#2A1611;border-radius:14px;padding:22px;text-align:center;
+  box-shadow:0 0 0 3px #9b978f,0 0 0 5px #3c3834,0 24px 60px rgba(0,0,0,.6)}
+.pin h2{margin:0 0 12px;font-size:26px;font-weight:700}
+.dots{display:flex;justify-content:center;gap:12px;height:22px;margin-bottom:16px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--amber)}
+.dots i.f{background:var(--amber)}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.keys button{height:62px;font-size:28px;border-radius:12px;padding:0}
+.pin-msg{min-height:26px;margin:12px 0 4px;font-size:18px;color:#ffb3a8}
+.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.linkish{border:0;background:none;color:var(--muted);font-size:18px;padding:8px;text-decoration:underline}
+
+/* ---------- Einstellungen ---------- */
+.admin{position:fixed;inset:0;z-index:60;display:flex;justify-content:center;padding:18px;background:rgba(15,8,5,.82)}
+.admin-sheet{width:min(880px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden;background:var(--strip);color:var(--ink);border-radius:10px}
+.admin-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 20px;background:#2A1611;color:var(--cream)}
+.admin-head h2{font-family:var(--f-display);font-weight:400;font-size:24px;margin:0}
+.admin-msg{margin:0;padding:10px 22px;font-size:19px;font-weight:600;background:#fff3cf}
+.admin-msg.ok{background:#dff3e5;color:#1f6b3f}.admin-msg.err{background:#fbe0dc;color:#9b1c1c}
+.admin-body{overflow-y:auto;padding:0 22px 40px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.admin section{padding:20px 0;border-bottom:1px solid rgba(43,26,18,.15)}
+.admin h3{font-size:24px;margin:0 0 8px;font-weight:700}
+.admin p,.admin li{font-size:19px;line-height:1.4;margin:6px 0}
+.admin ol{padding-left:24px;margin:6px 0 10px}
+.admin .hint{color:#6a5646;font-size:17px}
+.field{display:grid;gap:4px;margin:12px 0}
+.field>span{font-size:17px;font-weight:600;color:#6a4a36}
+.admin input[type=text],.admin input[type=number],.admin input[type=password]{font:500 20px var(--f-ui);padding:10px 12px;border:2px solid #cdb98f;border-radius:6px;background:#fff;color:var(--ink);width:100%}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row>.grow{flex:1 1 240px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0 18px}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 0;font-size:20px}
+.switch input{width:30px;height:30px;accent-color:var(--amber-deep);flex:none}
+.pl-list{display:grid;gap:2px;max-height:330px;overflow:auto;border:2px solid #e3d3ad;border-radius:6px;padding:6px;margin:10px 0;background:#fff}
+.pl{display:flex;align-items:center;gap:12px;font-size:19px;padding:8px}
+.pl input{width:26px;height:26px;accent-color:var(--amber-deep);flex:none}
+.pl small{color:#6a5646;font-size:16px;margin-left:auto;white-space:nowrap}
+.admin code{font-family:ui-monospace,Menlo,monospace;font-size:15px;background:#fff;border:1px solid #e3d3ad;padding:4px 6px;border-radius:4px;word-break:break-all;-webkit-user-select:all;user-select:all}
+.status{font-size:19px;font-weight:600}
+.status.ok{color:#1f6b3f}.status.err{color:#9b1c1c}
+
+/* ---------- Hochformat / schmal ---------- */
+@media (max-width:900px),(orientation:portrait){
+  .cabinet{grid-template-columns:0 minmax(0,1fr) 0;column-gap:0;gap:10px 0;padding:10px}
+  .tube{display:none}
+  .body{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+  .window{max-height:34dvh}
+  .picker-top{flex-wrap:wrap}.search{flex:1 1 100%}
+  .sheet{grid-template-columns:1fr}.big{width:160px;font-size:48px}
+}
+@media (prefers-reduced-motion:reduce){
+  .tube::before,.record,.sheet{animation:none}
+  .tube i{display:none}
+}
+</style>
+</head>
+<body>
+<div class="cabinet">
+  <header class="arch" id="arch">
+    <div class="arch-inner">
+      <h1 id="title">Jukebox</h1>
+      <p id="subtitle"></p>
+    </div>
+  </header>
+  <div class="tube left" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+
+  <main class="body">
+    <section class="panel window" aria-label="Wiedergabe">
+      <div class="now">
+        <div class="record-wrap"><div class="record" id="record"><div class="label" id="label"></div></div></div>
+        <div>
+          <p id="nowKicker">Läuft gerade</p>
+          <h2 id="nowTitle"></h2>
+          <p id="nowArtist"></p>
+          <div class="prog"><div id="progBar"></div></div>
+          <div class="times"><span id="tCur"></span><span id="tDur"></span></div>
+        </div>
+      </div>
+      <div class="queue">
+        <h3>Als Nächstes <span id="qCount"></span></h3>
+        <ol id="queue"></ol>
+      </div>
+    </section>
+
+    <section class="panel picker" aria-label="Songauswahl">
+      <div class="picker-top">
+        <div class="tabs" id="tabs" role="tablist"></div>
+        <label class="search">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+          <input id="search" type="search" placeholder="Song oder Interpret suchen" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search" aria-label="Song oder Interpret suchen">
+          <button id="clearSearch" type="button" aria-label="Suche löschen" hidden>×</button>
+        </label>
+      </div>
+      <div class="grid-wrap" id="gridWrap"><div id="grid"></div></div>
+      <div class="plate" id="plate"></div>
+    </section>
+
+    <div class="paused" id="paused" hidden>
+      <div><h2>Kurze Pause</h2><p>Die Jukebox ist gerade nicht mit Spotify verbunden. Der Gastgeber kümmert sich darum.</p></div>
+    </div>
+  </main>
+
+  <div class="tube right" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+</div>
+
+<!-- Auswahl-Dialog -->
+<div class="modal" id="modal" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+
+<!-- PIN -->
+<div class="modal" id="pinModal" hidden>
+  <div class="pin" id="pinBox" role="dialog" aria-modal="true" aria-label="PIN eingeben">
+    <h2>PIN eingeben</h2>
+    <div class="dots" id="pinDots"></div>
+    <div class="keys" id="pinKeys"></div>
+    <p class="pin-msg" id="pinMsg"></p>
+    <button class="linkish" id="pinCancel" type="button">Zurück zur Jukebox</button>
+  </div>
+</div>
+
+<!-- Einstellungen -->
+<div class="admin" id="admin" hidden>
+  <div class="admin-sheet" role="dialog" aria-modal="true" aria-label="Jukebox einrichten">
+    <div class="admin-head">
+      <h2>Jukebox einrichten</h2>
+      <button class="btn amber" id="adminStart" type="button">Jukebox starten</button>
+    </div>
+    <p class="admin-msg" id="adminMsg" hidden></p>
+    <div class="admin-body">
+
+      <section>
+        <h3>1. Spotify verbinden</h3>
+        <p class="status" id="spStatus"></p>
+        <ol>
+          <li>Auf <b>developer.spotify.com/dashboard</b> mit deinem Spotify-Premium-Konto anmelden und <b>Create app</b> wählen. Name und Beschreibung sind egal, bei «Which API/SDKs» <b>Web API</b> ankreuzen.</li>
+          <li>Als Redirect URI genau diese Adresse eintragen und speichern:<br>
+            <span class="row" style="margin-top:6px"><code id="redir"></code><button class="btn" id="copyRedir" type="button">Kopieren</button></span></li>
+          <li>Die <b>Client ID</b> der App kopieren und hier einfügen:</li>
+        </ol>
+        <div class="row">
+          <input class="grow" type="text" id="clientId" placeholder="Client ID" autocomplete="off" spellcheck="false">
+          <button class="btn amber" id="connect" type="button">Mit Spotify verbinden</button>
+          <button class="btn" id="disconnect" type="button">Trennen</button>
+        </div>
+        <p class="hint">Falls Spotify die Anmeldung ablehnt: im Dashboard unter «User Management» die E-Mail-Adresse deines Spotify-Kontos hinzufügen.</p>
+      </section>
+
+      <section>
+        <h3>2. Musik starten</h3>
+        <p>Starte in der Spotify-App auf dem Tablet eine lange Playlist als Hintergrundmusik. Die Wünsche der Gäste werden jeweils vor dem nächsten Song dieser Playlist eingereiht, so wird es nie still.</p>
+        <p class="status" id="playStatus"></p>
+        <div class="row">
+          <button class="btn" data-cmd="play" type="button">Abspielen</button>
+          <button class="btn" data-cmd="pause" type="button">Pause</button>
+          <button class="btn" data-cmd="next" type="button">Song überspringen</button>
+          <button class="btn" id="refreshPlay" type="button">Status aktualisieren</button>
+        </div>
+      </section>
+
+      <section>
+        <h3>3. Songs für die Gäste</h3>
+        <p>Wähle eigene Playlists aus. Jede erscheint als eigener Reiter auf der Jukebox.</p>
+        <div class="row">
+          <button class="btn" id="plShow" type="button">Meine Playlists anzeigen</button>
+          <button class="btn amber" id="plLoad" type="button">Songs laden</button>
+        </div>
+        <div class="pl-list" id="plList" hidden></div>
+        <p class="hint" id="libInfo"></p>
+        <label class="switch"><span>Gäste dürfen auf ganz Spotify suchen</span><input type="checkbox" id="allowSearch"></label>
+        <label class="switch"><span>Songs mit «Explicit»-Kennzeichnung ausblenden</span><input type="checkbox" id="hideExplicit"></label>
+      </section>
+
+      <section>
+        <h3>4. Regeln</h3>
+        <div class="two">
+          <label class="field"><span>Wartezeit zwischen zwei Wünschen (Sekunden, 0 = keine)</span><input type="number" id="cooldown" min="0" max="600" inputmode="numeric"></label>
+          <label class="field"><span>Maximale Anzahl Wünsche in der Warteschlange</span><input type="number" id="maxQueue" min="1" max="100" inputmode="numeric"></label>
+          <label class="field"><span>Gleicher Song frühestens wieder nach (Minuten)</span><input type="number" id="repeatMin" min="0" max="600" inputmode="numeric"></label>
+        </div>
+      </section>
+
+      <section>
+        <h3>5. Anzeige</h3>
+        <label class="field"><span>Titel oben</span><input type="text" id="setTitle" maxlength="40"></label>
+        <label class="field"><span>Zeile darunter</span><input type="text" id="setSubtitle" maxlength="90"></label>
+      </section>
+
+      <section>
+        <h3>6. Sperre</h3>
+        <p>Im gesperrten Modus kommen Gäste nur mit der PIN zurück in diese Einstellungen. Dazu den Titel oben <b>2 Sekunden gedrückt halten</b>.</p>
+        <div class="row">
+          <input class="grow" type="password" id="newPin" inputmode="numeric" maxlength="8" placeholder="Neue PIN (4 bis 8 Ziffern)" autocomplete="off">
+          <button class="btn" id="savePin" type="button">PIN speichern</button>
+        </div>
+        <p class="hint" id="pinInfo"></p>
+        <div class="row" style="margin-top:14px">
+          <button class="btn" id="clearQueue" type="button">Wunschliste zurücksetzen</button>
+        </div>
+        <p class="hint">Setzt nur die Anzeige und die Sperren für Wiederholungen zurück. Songs, die schon in Spotify eingereiht sind, bleiben dort.</p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ================= Hilfsfunktionen ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const hue = s => { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
+
+const DEMO = new URLSearchParams(location.search).has('demo');
+const NS = DEMO ? 'jukeboxdemo.' : 'jukebox.';
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(NS + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); } catch (e) { console.warn('Speichern fehlgeschlagen', e); } },
+  del(k) { try { localStorage.removeItem(NS + k); } catch (e) {} }
+};
+
+const DEFAULTS = {
+  clientId: '', title: 'Yanick & Stefan', subtitle: 'Such dir einen Song aus. Alle Wünsche laufen der Reihe nach.',
+  pin: '', playlistIds: [], allowSearch: true, hideExplicit: false, cooldown: 0, maxQueue: 14, repeatMin: 60, v: 2
+};
+
+/* ================= Zustand ================= */
+const storedSettings = LS.get('settings', {});
+let S = Object.assign({}, DEFAULTS, storedSettings);
+let tokens = LS.get('tokens', null);
+let me = LS.get('me', null);
+let library = LS.get('library', {});
+let pending = LS.get('pending', []);
+let picks = LS.get('picks', []);
+let lastPickAt = LS.get('lastPickAt', 0);
+
+let activeTab = null;
+let myPlaylists = [];
+let remoteQuery = '', remoteResults = null, remoteLoading = false;
+let player = { item: null, progress: 0, playing: false, fetchedAt: 0, device: '', noDevice: false };
+let adminOpen = false;
+const trackMap = new Map();
+
+const saveS = () => LS.set('settings', S);
+if ((storedSettings.v || 1) < 2) { S.cooldown = 0; S.maxQueue = 14; S.v = 2; saveS(); }
+const saveRuntime = () => { LS.set('pending', pending); LS.set('picks', picks); LS.set('lastPickAt', lastPickAt); };
+
+/* ================= Spotify-Anmeldung (PKCE) ================= */
+const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-currently-playing playlist-read-private playlist-read-collaborative';
+const redirectUri = () => location.origin + location.pathname.replace(/index\.html$/, '');
+const b64url = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+class ApiError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
+
+async function login() {
+  if (!S.clientId) { adminMsg('Füge zuerst die Client ID ein.', 'err'); return; }
+  if (!window.crypto || !crypto.subtle) { adminMsg('Die Seite muss über https geöffnet werden, sonst funktioniert die Anmeldung nicht.', 'err'); return; }
+  const verifier = b64url(crypto.getRandomValues(new Uint8Array(48)));
+  const challenge = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
+  const state = b64url(crypto.getRandomValues(new Uint8Array(12)));
+  LS.set('verifier', verifier); LS.set('oauthState', state);
+  const p = new URLSearchParams({ response_type: 'code', client_id: S.clientId, scope: SCOPES, code_challenge_method: 'S256', code_challenge: challenge, redirect_uri: redirectUri(), state });
+  location.href = 'https://accounts.spotify.com/authorize?' + p.toString();
+}
+
+async function handleRedirect() {
+  const q = new URLSearchParams(location.search);
+  if (!q.has('code') && !q.has('error')) return null;
+  const legit = !!q.get('state') && q.get('state') === LS.get('oauthState');
+  history.replaceState(null, '', redirectUri());
+  if (!legit) return { legit: false, msg: 'Die Anmeldung konnte nicht zugeordnet werden. Bitte nochmals verbinden.' };
+  if (q.has('error')) return { legit: true, msg: 'Spotify-Anmeldung abgebrochen (' + q.get('error') + ').' };
+  try {
+    const body = new URLSearchParams({ grant_type: 'authorization_code', code: q.get('code'), redirect_uri: redirectUri(), client_id: S.clientId, code_verifier: LS.get('verifier', '') });
+    const r = await fetch('https://accounts.spotify.com/api/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+    const j = await r.json();
+    if (!r.ok) return { legit: true, msg: 'Spotify hat die Anmeldung abgelehnt: ' + (j.error_description || j.error || r.status) };
+    saveTokens(j);
+    LS.del('verifier'); LS.del('oauthState');
+    return { legit: true, ok: true, msg: 'Mit Spotify verbunden.' };
+  } catch (e) {
+    return { legit: true, msg: 'Anmeldung fehlgeschlagen. Ist das Tablet online?' };
+  }
+}
+
+function saveTokens(j) {
+  tokens = { access: j.access_token, refresh: j.refresh_token || (tokens && tokens.refresh), exp: Date.now() + (j.expires_in - 60) * 1000 };
+  LS.set('tokens', tokens);
+}
+
+let refreshing = null;
+function refreshToken() {
+  if (!tokens || !tokens.refresh) return Promise.reject(new ApiError(401, 'Nicht verbunden'));
+  if (!refreshing) {
+    refreshing = (async () => {
+      const body = new URLSearchParams({ grant_type: 'refresh_token', refresh_token: tokens.refresh, client_id: S.clientId });
+      const r = await fetch('https://accounts.spotify.com/api/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        if (r.status === 400 || r.status === 401) { tokens = null; LS.del('tokens'); renderAll(); }
+        throw new ApiError(401, 'Anmeldung abgelaufen');
+      }
+      saveTokens(j);
+    })().finally(() => { refreshing = null; });
+  }
+  return refreshing;
+}
+
+let backoffUntil = 0;
+async function api(method, path, opts = {}) {
+  if (Date.now() < backoffUntil) throw new ApiError(429, 'Spotify-Limit');
+  if (!tokens) throw new ApiError(401, 'Nicht verbunden');
+  if (Date.now() > tokens.exp) await refreshToken();
+  const url = 'https://api.spotify.com/v1' + path + (opts.query ? '?' + new URLSearchParams(opts.query).toString() : '');
+  const go = () => fetch(url, { method, headers: { Authorization: 'Bearer ' + tokens.access } });
+  let r;
+  try { r = await go(); } catch (e) { throw new ApiError(0, 'Keine Verbindung zu Spotify. Ist das Tablet online?'); }
+  if (r.status === 401) { await refreshToken(); r = await go(); }
+  if (r.status === 429) {
+    const ra = parseInt(r.headers.get('Retry-After') || '30', 10);
+    backoffUntil = Date.now() + (isNaN(ra) ? 30 : ra) * 1000;
+    throw new ApiError(429, 'Spotify-Limit');
+  }
+  const text = await r.text();
+  let j = null; try { j = text ? JSON.parse(text) : null; } catch (e) {}
+  if (!r.ok) throw new ApiError(r.status, (j && j.error && (j.error.reason || j.error.message)) || ('HTTP ' + r.status));
+  return j;
+}
+
+function errText(e) {
+  if (!e) return 'Unbekannter Fehler.';
+  if (e.status === 404) return 'Keine aktive Wiedergabe gefunden. Starte in der Spotify-App einen Song.';
+  if (e.status === 403) return 'Spotify lehnt ab (' + e.message + '). Nötig sind ein Premium-Konto und dein Konto unter «User Management» im Dashboard.';
+  if (e.status === 429) return 'Spotify-Limit erreicht. Bitte eine Minute warten.';
+  if (e.status === 401) return 'Nicht mit Spotify verbunden.';
+  return e.message || String(e);
+}
+
+/* ================= Spotify-Daten ================= */
+function simplify(t) {
+  if (!t) return null;
+  const imgs = (t.album && t.album.images) || t.images || (t.show && t.show.images) || [];
+  return {
+    uri: t.uri, name: t.name || '',
+    artists: (t.artists || []).map(a => a.name).join(', ') || (t.show && t.show.name) || '',
+    img: (imgs[1] || imgs[0] || {}).url || '', imgL: (imgs[0] || {}).url || '',
+    dur: t.duration_ms || 0, explicit: !!t.explicit
+  };
+}
+
+async function loadMe() {
+  const j = await api('GET', '/me');
+  me = { id: j.id, name: j.display_name || j.id };
+  LS.set('me', me);
+}
+
+async function loadMyPlaylists() {
+  if (!me) await loadMe();
+  const out = [];
+  for (let offset = 0; offset < 1000; offset += 50) {
+    const j = await api('GET', '/me/playlists', { query: { limit: 50, offset } });
+    for (const p of (j.items || [])) {
+      if (!p) continue;
+      if ((p.owner && p.owner.id === me.id) || p.collaborative) {
+        const total = (p.items && p.items.total) ?? (p.tracks && p.tracks.total) ?? 0;
+        out.push({ id: p.id, name: p.name, total });
+      }
+    }
+    if (!j.next) break;
+  }
+  return out;
+}
+
+async function loadPlaylistTracks(id) {
+  const tracks = [];
+  for (let offset = 0; offset < 3000; offset += 50) {
+    const j = await api('GET', '/playlists/' + encodeURIComponent(id) + '/items', { query: { limit: 50, offset, additional_types: 'track' } });
+    for (const it of (j.items || [])) {
+      const t = it && (it.item || it.track);
+      if (t && t.type === 'track' && t.uri && !t.is_local) tracks.push(simplify(t));
+    }
+    if (!j.next) break;
+  }
+  return tracks;
+}
+
+/* ================= Wiedergabe abfragen ================= */
+let pollTimer = null;
+function schedulePoll(ms) { clearTimeout(pollTimer); pollTimer = setTimeout(pollPlayer, ms); }
+
+async function pollPlayer() {
+  if (DEMO) { renderNow(); return; }
+  if (!tokens) { renderAll(); schedulePoll(15000); return; }
+  let next = 10000;
+  try {
+    const j = await api('GET', '/me/player', { query: { additional_types: 'track,episode' } });
+    const prevUri = player.item && player.item.uri;
+    if (!j || !j.item) {
+      player = { item: null, progress: 0, playing: false, fetchedAt: Date.now(), device: j && j.device ? j.device.name : '', noDevice: !j };
+    } else {
+      player = { item: simplify(j.item), progress: j.progress_ms || 0, playing: !!j.is_playing, fetchedAt: Date.now(), device: j.device ? j.device.name : '', noDevice: false };
+      if (player.item.uri !== prevUri) onTrackChange(player.item.uri, !!prevUri);
+      if (player.playing && player.item.dur) {
+        const remaining = player.item.dur - player.progress;
+        if (remaining < 10000) next = Math.max(1500, remaining + 1200);
+      }
+    }
+  } catch (e) {
+    if (e.status === 429) next = Math.max(next, backoffUntil - Date.now() + 500);
+  }
+  if (document.visibilityState === 'hidden') next = 30000;
+  renderNow(); renderPlate(); renderPaused();
+  if (adminOpen) renderPlayStatus();
+  schedulePoll(next);
+}
+
+function onTrackChange(uri, hadPrevious) {
+  const idx = pending.findIndex(p => p.uri === uri);
+  if (idx >= 0) {
+    pending.splice(0, idx + 1);
+  } else if (pending.length && hadPrevious) {
+    const p = pending[0];
+    if (Date.now() - p.addedAt > 15000) {
+      p.misses = (p.misses || 0) + 1;
+      if (p.misses >= 2) pending.shift();
+    }
+  }
+  saveRuntime(); renderQueue(); renderGrid();
+}
+
+/* ================= Wünsche ================= */
+const cooldownLeft = () => Math.max(0, Math.ceil((lastPickAt + S.cooldown * 1000 - Date.now()) / 1000));
+
+function blockReason(t) {
+  if (!DEMO && !tokens) return 'Die Jukebox ist gerade nicht mit Spotify verbunden.';
+  if (player.item && player.item.uri === t.uri) return 'Dieser Song läuft gerade.';
+  if (pending.some(p => p.uri === t.uri)) return 'Dieser Song ist schon in der Warteschlange.';
+  if (S.repeatMin > 0) {
+    const last = picks.filter(p => p.uri === t.uri).pop();
+    if (last && Date.now() - last.at < S.repeatMin * 60000) {
+      const min = Math.ceil((last.at + S.repeatMin * 60000 - Date.now()) / 60000);
+      return 'Dieser Song wurde vor Kurzem gewünscht. Wieder möglich in ' + min + ' Min.';
+    }
+  }
+  if (pending.length >= S.maxQueue) return 'Einen Moment bitte! Es sind schon ' + S.maxQueue + ' Songs in der Warteschlange. Sobald der nächste Song läuft, ist wieder Platz für deinen Wunsch.';
+  const cd = cooldownLeft();
+  if (cd > 0) return 'Kurz warten: Der nächste Wunsch ist in ' + cd + ' Sekunden möglich.';
+  return null;
+}
+
+function coverStyle(t, big) {
+  const url = big ? (t.imgL || t.img) : (t.img || t.imgL);
+  return url ? `background-image:url('${esc(url)}')` : `background-color:hsl(${hue(t.name + t.artists)} 38% 45%)`;
+}
+const initial = t => esc((t.name || '?').trim().charAt(0).toUpperCase());
+
+function openConfirm(t, msg) {
+  const reason = msg || blockReason(t);
+  $('#sheet').innerHTML = `
+    <div class="big" style="${coverStyle(t, true)}">${(t.imgL || t.img) ? '' : initial(t)}</div>
+    <div>
+      <h2>${esc(t.name)}</h2><div class="r"></div>
+      <p class="a">${esc(t.artists)}</p>
+      <p class="meta">${t.dur ? fmt(t.dur) + ' Min.' : ''}</p>
+      ${reason ? `<p class="msg">${esc(reason)}</p>` : ''}
+      <div class="acts">
+        ${reason ? '' : '<button class="btn amber" id="doPick" type="button">Diesen Song wählen</button>'}
+        <button class="btn" id="closeModal" type="button">Zurück</button>
+      </div>
+    </div>`;
+  $('#modal').hidden = false;
+  const pickBtn = $('#doPick');
+  if (pickBtn) pickBtn.onclick = () => confirmPick(t, pickBtn);
+  $('#closeModal').onclick = closeModal;
+}
+
+let doneTimer = null;
+function closeModal() { clearTimeout(doneTimer); $('#modal').hidden = true; $('#sheet').innerHTML = ''; }
+
+async function confirmPick(t, btn) {
+  const reason = blockReason(t);
+  if (reason) { openConfirm(t, reason); return; }
+  btn.disabled = true; btn.textContent = 'Wird eingereiht …';
+  try {
+    if (!DEMO) await api('POST', '/me/player/queue', { query: { uri: t.uri } });
+    pending.push({ uri: t.uri, name: t.name, artists: t.artists, img: t.img, imgL: t.imgL, dur: t.dur, explicit: t.explicit, addedAt: Date.now(), misses: 0 });
+    picks.push({ uri: t.uri, at: Date.now() });
+    if (picks.length > 600) picks = picks.slice(-600);
+    lastPickAt = Date.now();
+    saveRuntime(); renderQueue(); renderGrid(); renderPlate();
+    const n = pending.length;
+    $('#sheet').innerHTML = `<div class="done"><h2>Gewählt!</h2><p>${n === 1 ? 'Dein Song kommt als Nächstes.' : 'Dein Song ist Nr. ' + n + ' in der Reihe.'}</p></div>`;
+    doneTimer = setTimeout(closeModal, 2800);
+  } catch (e) {
+    let m = 'Das hat nicht geklappt. Probier es nochmals.';
+    if (e.status === 404) m = 'Gerade läuft keine Musik. Sag dem Gastgeber Bescheid.';
+    else if (e.status === 429) m = 'Die Jukebox ist kurz ausgelastet. Probier es in einer Minute nochmals.';
+    else if (e.status === 401) m = 'Die Jukebox ist gerade nicht mit Spotify verbunden.';
+    else if (e.status === 0) m = 'Keine Internetverbindung. Probier es gleich nochmals.';
+    openConfirm(t, m);
+  }
+}
+
+async function remoteSearch(q) {
+  remoteQuery = q; remoteResults = null; remoteLoading = true; renderGrid();
+  try {
+    let items;
+    if (DEMO) items = allTracks().filter(t => (t.name + ' ' + t.artists).toLowerCase().includes(q.toLowerCase().slice(0, 3)));
+    else {
+      const j = await api('GET', '/search', { query: { q, type: 'track', limit: 10, market: 'from_token' } });
+      items = ((j.tracks && j.tracks.items) || []).filter(Boolean).map(simplify);
+    }
+    if (S.hideExplicit) items = items.filter(t => !t.explicit);
+    if (remoteQuery === q) remoteResults = items;
+  } catch (e) {
+    if (remoteQuery === q) remoteResults = { error: e.status === 429 ? 'Die Suche macht kurz Pause. Probier es in einer Minute nochmals.' : 'Die Suche hat nicht geklappt.' };
+  }
+  remoteLoading = false; renderGrid();
+}
+
+/* ================= Darstellung ================= */
+const visibleTabs = () => S.playlistIds.filter(id => library[id] && library[id].tracks.length);
+const allTracks = () => { const seen = new Set(), out = []; for (const id of visibleTabs()) for (const t of library[id].tracks) if (!seen.has(t.uri)) { seen.add(t.uri); out.push(t); } return out; };
+
+function renderMarquee() { $('#title').textContent = S.title || 'Jukebox'; $('#subtitle').textContent = S.subtitle || ''; }
+
+function renderTabs() {
+  const tabs = visibleTabs();
+  if (!tabs.includes(activeTab)) activeTab = tabs[0] || null;
+  const searching = !!$('#search').value.trim();
+  $('#tabs').innerHTML = tabs.map(id => `<button class="tab" role="tab" type="button" data-tab="${esc(id)}" aria-selected="${!searching && id === activeTab}">${esc(library[id].name)}</button>`).join('');
+}
+
+function stripHtml(t) {
+  trackMap.set(t.uri, t);
+  const isNow = player.item && player.item.uri === t.uri;
+  const isPending = pending.some(p => p.uri === t.uri);
+  const badge = isNow ? '<span class="badge">Läuft</span>' : isPending ? '<span class="badge">Gewählt</span>' : '';
+  return `<button class="strip${isNow || isPending ? ' on' : ''}" type="button" data-uri="${esc(t.uri)}">
+    <span class="cv" style="${coverStyle(t)}">${(t.img || t.imgL) ? '' : initial(t)}</span>
+    <span><span class="t">${esc(t.name)}</span><span class="r"></span><span class="a">${esc(t.artists)}</span></span>${badge}</button>`;
+}
+
+function renderGrid() {
+  const q = $('#search').value.trim();
+  const ql = q.toLowerCase();
+  $('#clearSearch').hidden = !q;
+  trackMap.clear();
+  let list;
+  if (ql) list = allTracks().filter(t => (t.name + ' ' + t.artists).toLowerCase().includes(ql));
+  else list = activeTab ? library[activeTab].tracks : [];
+  if (S.hideExplicit) list = list.filter(t => !t.explicit);
+
+  let html = '';
+  if (list.length) {
+    html = `<div class="grid">${list.slice(0, 500).map(stripHtml).join('')}</div>`;
+  } else if (ql) {
+    html = visibleTabs().length ? `<p class="note">In den Playlists ist nichts zu «${esc(q)}» dabei.</p>` : '';
+  } else if (!visibleTabs().length) {
+    html = S.allowSearch ? '<p class="note">Tipp oben einen Song oder Interpreten ein.</p>' : '<p class="note">Noch keine Songs freigegeben. Der Gastgeber richtet das gleich ein.</p>';
+  }
+
+  if (S.allowSearch && ql.length >= 2) {
+    if (remoteQuery === q && remoteLoading) html += '<p class="note">Suche auf Spotify …</p>';
+    else if (remoteQuery === q && remoteResults && remoteResults.error) html += `<p class="note">${esc(remoteResults.error)}</p>`;
+    else if (remoteQuery === q && remoteResults) {
+      html += '<h3 class="sect">Auf Spotify gefunden</h3>' + (remoteResults.length ? `<div class="grid">${remoteResults.map(stripHtml).join('')}</div>` : '<p class="note">Spotify hat dazu nichts gefunden.</p>');
+    } else html += `<div class="remote-cta"><button class="btn" id="remoteBtn" type="button">«${esc(q)}» auf ganz Spotify suchen</button></div>`;
+  }
+  $('#grid').innerHTML = html;
+}
+
+function renderNow() {
+  const it = player.item;
+  const rec = $('#record');
+  if (it) {
+    $('#nowKicker').textContent = player.playing ? 'Läuft gerade' : 'Pausiert';
+    $('#nowTitle').textContent = it.name;
+    $('#nowArtist').textContent = it.artists;
+    const url = it.imgL || it.img;
+    $('#label').style.backgroundImage = url ? `url('${url}')` : '';
+    rec.classList.toggle('playing', !!player.playing);
+  } else {
+    $('#nowKicker').textContent = 'Gerade ist es still';
+    $('#nowTitle').textContent = 'Wähl den ersten Song';
+    $('#nowArtist').textContent = '';
+    $('#label').style.backgroundImage = '';
+    rec.classList.remove('playing');
+  }
+  updateProgress();
+}
+
+function updateProgress() {
+  const it = player.item;
+  if (!it || !it.dur) { $('#progBar').style.width = '0'; $('#tCur').textContent = ''; $('#tDur').textContent = ''; return; }
+  const prog = Math.min(it.dur, player.progress + (player.playing ? Date.now() - player.fetchedAt : 0));
+  $('#progBar').style.width = (prog / it.dur * 100).toFixed(2) + '%';
+  $('#tCur').textContent = fmt(prog);
+  $('#tDur').textContent = fmt(it.dur);
+}
+
+function renderQueue() {
+  $('#qCount').textContent = pending.length ? pending.length + ' von ' + S.maxQueue : '';
+  $('#queue').classList.toggle('compact', pending.length > 6);
+  $('#queue').innerHTML = pending.length
+    ? pending.map(p => `<li><span class="qc" style="${coverStyle(p)}"></span><span class="qx"><span class="qt">${esc(p.name)}</span><span class="qa">${esc(p.artists)}</span></span></li>`).join('')
+    : '<p class="empty">Noch keine Wünsche. Deiner könnte der erste sein.</p>';
+}
+
+function renderPlate() {
+  let cls = '', txt = 'Bereit für deinen Wunsch';
+  if (!DEMO && !tokens) { cls = 'stop'; txt = 'Jukebox pausiert'; }
+  else if (pending.length >= S.maxQueue) { cls = 'stop'; txt = 'Warteschlange voll. Bitte einen Moment warten.'; }
+  else {
+    const cd = cooldownLeft(), free = S.maxQueue - pending.length;
+    if (cd > 0) { cls = 'wait'; txt = 'Nächster Wunsch in ' + cd + ' s'; }
+    else if (free <= 3) { cls = 'wait'; txt = 'Bereit. Noch ' + free + (free === 1 ? ' Platz' : ' Plätze') + ' frei.'; }
+  }
+  const p = $('#plate');
+  if (p.dataset.txt !== txt) { p.className = 'plate ' + cls; p.innerHTML = `<span class="lamp"></span><span>${esc(txt)}</span>`; p.dataset.txt = txt; }
+}
+
+function renderPaused() { $('#paused').hidden = DEMO || !!tokens; }
+
+function renderAll() { renderMarquee(); renderTabs(); renderGrid(); renderNow(); renderQueue(); renderPlate(); renderPaused(); if (adminOpen) fillAdmin(); }
+
+/* ================= Gäste-Bedienung ================= */
+$('#tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-tab]'); if (!b) return;
+  activeTab = b.dataset.tab; $('#search').value = ''; remoteQuery = ''; remoteResults = null;
+  renderTabs(); renderGrid(); $('#gridWrap').scrollTop = 0;
+});
+$('#grid').addEventListener('click', e => {
+  if (e.target.closest('#remoteBtn')) { remoteSearch($('#search').value.trim()); return; }
+  const s = e.target.closest('.strip'); if (!s) return;
+  const t = trackMap.get(s.dataset.uri); if (t) openConfirm(t);
+});
+let searchDeb = null;
+$('#search').addEventListener('input', () => { clearTimeout(searchDeb); searchDeb = setTimeout(() => { renderTabs(); renderGrid(); $('#gridWrap').scrollTop = 0; }, 160); });
+$('#search').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault(); $('#search').blur();
+  const q = $('#search').value.trim();
+  renderTabs(); renderGrid();
+  if (S.allowSearch && q.length >= 2 && remoteQuery !== q) remoteSearch(q);
+});
+$('#clearSearch').addEventListener('click', e => { e.preventDefault(); resetSearch(); });
+function resetSearch() { $('#search').value = ''; remoteQuery = ''; remoteResults = null; renderTabs(); renderGrid(); $('#gridWrap').scrollTop = 0; }
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+
+/* ================= Sperre, PIN, Kiosk ================= */
+let lpTimer = null;
+const arch = $('#arch');
+let lpStart = null;
+arch.addEventListener('pointerdown', e => { lpStart = { x: e.clientX, y: e.clientY }; clearTimeout(lpTimer); lpTimer = setTimeout(requestAdmin, 2000); });
+arch.addEventListener('pointermove', e => { if (lpStart && Math.hypot(e.clientX - lpStart.x, e.clientY - lpStart.y) > 30) clearTimeout(lpTimer); });
+arch.addEventListener('pointerup', () => { lpStart = null; clearTimeout(lpTimer); });
+document.addEventListener('contextmenu', e => { if (!e.target.closest('input')) e.preventDefault(); });
+
+function requestAdmin() { closeModal(); if (!S.pin) openAdmin(); else openPin(); }
+
+let pinBuf = '', pinFails = 0, pinLockUntil = 0;
+$('#pinKeys').innerHTML = ['1','2','3','4','5','6','7','8','9','del','0','ok']
+  .map(k => `<button class="btn" type="button" data-k="${k}" aria-label="${k === 'del' ? 'Löschen' : k === 'ok' ? 'Bestätigen' : k}">${k === 'del' ? '⌫' : k === 'ok' ? '✓' : k}</button>`).join('');
+function renderPin() { $('#pinDots').innerHTML = Array.from({ length: Math.max(4, S.pin.length) }, (_, i) => `<i class="${i < pinBuf.length ? 'f' : ''}"></i>`).join(''); }
+function openPin() { pinBuf = ''; $('#pinMsg').textContent = ''; renderPin(); $('#pinModal').hidden = false; }
+function closePin() { $('#pinModal').hidden = true; pinBuf = ''; }
+$('#pinCancel').onclick = closePin;
+$('#pinKeys').addEventListener('click', e => {
+  const b = e.target.closest('[data-k]'); if (!b) return;
+  if (Date.now() < pinLockUntil) { $('#pinMsg').textContent = 'Gesperrt. Noch ' + Math.ceil((pinLockUntil - Date.now()) / 1000) + ' s warten.'; return; }
+  const k = b.dataset.k;
+  if (k === 'del') pinBuf = pinBuf.slice(0, -1);
+  else if (k === 'ok') return checkPin();
+  else if (pinBuf.length < 8) pinBuf += k;
+  renderPin();
+  if (pinBuf.length === S.pin.length) checkPin();
+});
+function checkPin() {
+  if (pinBuf === S.pin) { pinFails = 0; closePin(); openAdmin(); return; }
+  pinFails++; pinBuf = '';
+  if (pinFails >= 5) { pinFails = 0; pinLockUntil = Date.now() + 60000; $('#pinMsg').textContent = 'Zu viele Versuche. Bitte 60 s warten.'; }
+  else $('#pinMsg').textContent = 'Falsche PIN.';
+  renderPin();
+  const box = $('#pinBox'); box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+}
+
+function trapBack() { try { history.pushState({ jukebox: 1 }, '', location.href); } catch (e) {} }
+window.addEventListener('popstate', () => { trapBack(); closeModal(); closePin(); });
+
+let wakeLock = null;
+async function keepAwake() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { keepAwake(); if (!DEMO) pollPlayer(); } });
+
+let lastTouch = Date.now();
+['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { lastTouch = Date.now(); }, { passive: true }));
+
+/* ================= Einstellungen ================= */
+function adminMsg(text, kind) { const m = $('#adminMsg'); m.hidden = !text; m.textContent = text || ''; m.className = 'admin-msg ' + (kind || ''); }
+function openAdmin() { adminOpen = true; closeModal(); closePin(); fillAdmin(); $('#admin').hidden = false; if (!DEMO) pollPlayer(); }
+function closeAdmin() { adminOpen = false; $('#admin').hidden = true; adminMsg(''); }
+
+function fillAdmin() {
+  $('#redir').textContent = DEMO ? '(im Demo-Modus nicht nötig)' : redirectUri();
+  const sp = $('#spStatus');
+  if (DEMO) { sp.textContent = 'Demo-Modus: keine echte Verbindung zu Spotify.'; sp.className = 'status'; }
+  else if (tokens) { sp.textContent = 'Verbunden' + (me ? ' als ' + me.name : '') + '.'; sp.className = 'status ok'; }
+  else { sp.textContent = 'Nicht verbunden.'; sp.className = 'status err'; }
+  if (document.activeElement !== $('#clientId')) $('#clientId').value = S.clientId;
+  $('#disconnect').hidden = !tokens || DEMO;
+  $('#allowSearch').checked = S.allowSearch;
+  $('#hideExplicit').checked = S.hideExplicit;
+  $('#cooldown').value = S.cooldown; $('#maxQueue').value = S.maxQueue; $('#repeatMin').value = S.repeatMin;
+  if (document.activeElement !== $('#setTitle')) $('#setTitle').value = S.title;
+  if (document.activeElement !== $('#setSubtitle')) $('#setSubtitle').value = S.subtitle;
+  $('#pinInfo').textContent = S.pin ? 'Eine PIN ist gesetzt.' : 'Noch keine PIN gesetzt. Ohne PIN lässt sich die Jukebox nicht starten.';
+  renderLibInfo(); renderPlayStatus();
+}
+function renderLibInfo() {
+  const tabs = visibleTabs();
+  const total = tabs.reduce((n, id) => n + library[id].tracks.length, 0);
+  $('#libInfo').textContent = tabs.length ? `Geladen: ${tabs.length} ${tabs.length === 1 ? 'Playlist' : 'Playlists'} mit ${total} Songs (${tabs.map(id => library[id].name).join(', ')}).` : 'Noch keine Songs geladen.';
+}
+function renderPlayStatus() {
+  const el = $('#playStatus');
+  if (DEMO) { el.textContent = 'Demo: Wiedergabe wird simuliert.'; el.className = 'status'; return; }
+  if (!tokens) { el.textContent = 'Zuerst mit Spotify verbinden.'; el.className = 'status err'; return; }
+  if (player.item) { el.textContent = (player.playing ? 'Läuft' : 'Pausiert') + (player.device ? ' auf «' + player.device + '»' : '') + ': ' + player.item.name; el.className = 'status ok'; }
+  else { el.textContent = 'Keine aktive Wiedergabe. Öffne die Spotify-App und starte einen Song.'; el.className = 'status err'; }
+}
+
+$('#copyRedir').onclick = async () => {
+  try { await navigator.clipboard.writeText(redirectUri()); adminMsg('Redirect URI kopiert.', 'ok'); }
+  catch (e) { const r = document.createRange(); r.selectNodeContents($('#redir')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); adminMsg('Adresse markiert. Jetzt kopieren.', ''); }
+};
+$('#clientId').addEventListener('change', () => { S.clientId = $('#clientId').value.trim(); saveS(); });
+$('#connect').onclick = () => { S.clientId = $('#clientId').value.trim(); saveS(); if (DEMO) { adminMsg('Im Demo-Modus nicht nötig.', ''); return; } login(); };
+$('#disconnect').onclick = () => { tokens = null; me = null; LS.del('tokens'); LS.del('me'); renderAll(); adminMsg('Verbindung getrennt.', ''); };
+
+document.querySelectorAll('[data-cmd]').forEach(b => b.addEventListener('click', async () => {
+  const c = b.dataset.cmd;
+  if (DEMO) {
+    if (c === 'play') { player.progress = currentProgress(); player.fetchedAt = Date.now(); player.playing = true; }
+    if (c === 'pause') { player.progress = currentProgress(); player.fetchedAt = Date.now(); player.playing = false; }
+    if (c === 'next') demoAdvance();
+    renderNow(); return;
+  }
+  try {
+    if (c === 'play') await api('PUT', '/me/player/play');
+    if (c === 'pause') await api('PUT', '/me/player/pause');
+    if (c === 'next') await api('POST', '/me/player/next');
+    adminMsg('', ''); setTimeout(pollPlayer, 800);
+  } catch (e) { adminMsg(errText(e), 'err'); }
+}));
+$('#refreshPlay').onclick = () => { if (!DEMO) pollPlayer(); };
+
+function renderPlList() {
+  const list = $('#plList');
+  list.hidden = false;
+  list.innerHTML = myPlaylists.length
+    ? myPlaylists.map(p => `<label class="pl"><input type="checkbox" data-pl="${esc(p.id)}" ${S.playlistIds.includes(p.id) ? 'checked' : ''}><span>${esc(p.name)}</span><small>${p.total} Songs</small></label>`).join('')
+    : '<p class="hint" style="padding:8px">Keine eigenen Playlists gefunden. Tipp: In Spotify eine eigene Playlist anlegen und Songs hinzufügen. Fremde Playlists liefert Spotify hier nicht.</p>';
+}
+$('#plList').addEventListener('change', e => {
+  const cb = e.target.closest('[data-pl]'); if (!cb) return;
+  const id = cb.dataset.pl;
+  S.playlistIds = cb.checked ? [...S.playlistIds.filter(x => x !== id), id] : S.playlistIds.filter(x => x !== id);
+  saveS();
+});
+$('#plShow').onclick = async () => {
+  if (DEMO) { myPlaylists = Object.keys(library).map(id => ({ id, name: library[id].name, total: library[id].tracks.length })); renderPlList(); return; }
+  const b = $('#plShow'); b.disabled = true; adminMsg('Playlists werden geladen …', '');
+  try { myPlaylists = await loadMyPlaylists(); renderPlList(); adminMsg('Hake die Playlists an und tippe dann auf «Songs laden».', ''); }
+  catch (e) { adminMsg(errText(e), 'err'); }
+  b.disabled = false;
+};
+$('#plLoad').onclick = async () => {
+  if (DEMO) { renderAll(); adminMsg('Demo-Songs sind bereit.', 'ok'); return; }
+  if (!S.playlistIds.length) { adminMsg('Wähle zuerst mindestens eine Playlist aus («Meine Playlists anzeigen»).', 'err'); return; }
+  const b = $('#plLoad'); b.disabled = true;
+  try {
+    if (!myPlaylists.length) myPlaylists = await loadMyPlaylists();
+    const next = {}; let total = 0;
+    for (let i = 0; i < S.playlistIds.length; i++) {
+      const id = S.playlistIds[i];
+      const meta = myPlaylists.find(p => p.id === id);
+      if (!meta) continue;
+      adminMsg(`Lade «${meta.name}» (${i + 1} von ${S.playlistIds.length}) …`, '');
+      const tracks = await loadPlaylistTracks(id);
+      next[id] = { name: meta.name, tracks }; total += tracks.length;
+    }
+    library = next; LS.set('library', library);
+    S.playlistIds = S.playlistIds.filter(id => next[id]); saveS();
+    activeTab = null; renderAll();
+    adminMsg(`${total} Songs aus ${Object.keys(next).length} ${Object.keys(next).length === 1 ? 'Playlist' : 'Playlists'} bereit.`, 'ok');
+  } catch (e) { adminMsg(errText(e), 'err'); }
+  b.disabled = false;
+};
+
+$('#allowSearch').onchange = e => { S.allowSearch = e.target.checked; saveS(); renderGrid(); };
+$('#hideExplicit').onchange = e => { S.hideExplicit = e.target.checked; saveS(); renderGrid(); };
+[['cooldown', 0, 600], ['maxQueue', 1, 100], ['repeatMin', 0, 600]].forEach(([id, min, max]) => {
+  $('#' + id).addEventListener('change', e => { let v = parseInt(e.target.value, 10); if (isNaN(v)) v = DEFAULTS[id]; S[id] = Math.min(max, Math.max(min, v)); e.target.value = S[id]; saveS(); renderPlate(); });
+});
+$('#setTitle').addEventListener('input', e => { S.title = e.target.value; saveS(); renderMarquee(); });
+$('#setSubtitle').addEventListener('input', e => { S.subtitle = e.target.value; saveS(); renderMarquee(); });
+$('#savePin').onclick = () => {
+  const v = $('#newPin').value.trim();
+  if (!/^\d{4,8}$/.test(v)) { adminMsg('Die PIN muss aus 4 bis 8 Ziffern bestehen.', 'err'); return; }
+  S.pin = v; saveS(); $('#newPin').value = ''; fillAdmin(); adminMsg('PIN gespeichert. Merk sie dir gut.', 'ok');
+};
+$('#clearQueue').onclick = () => { pending = []; picks = []; lastPickAt = 0; saveRuntime(); renderAll(); adminMsg('Wunschliste zurückgesetzt.', 'ok'); };
+
+$('#adminStart').onclick = async () => {
+  if (!/^\d{4,8}$/.test(S.pin)) { adminMsg('Lege zuerst unter «6. Sperre» eine PIN fest.', 'err'); return; }
+  if (!DEMO && !tokens) { adminMsg('Verbinde zuerst Spotify (Schritt 1).', 'err'); return; }
+  closeAdmin(); resetSearch(); trapBack();
+  try { if (!document.fullscreenElement && document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen({ navigationUI: 'hide' }); } catch (e) {}
+  keepAwake(); if (!DEMO) pollPlayer();
+};
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closePin(); } });
+
+/* ================= Demo ================= */
+const currentProgress = () => player.item ? Math.min(player.item.dur, player.progress + (player.playing ? Date.now() - player.fetchedAt : 0)) : 0;
+function demoLibrary() {
+  const mk = (list, pre) => list.map(([name, artists], i) => ({ uri: 'demo:' + pre + i, name, artists, img: '', imgL: '', dur: 35000 + (i * 7919) % 30000, explicit: false }));
+  return {
+    d1: { name: 'Partyklassiker', tracks: mk([
+      ['Tanz bis der Morgen kommt', 'Die Nachtfalter'], ['Goldene Zeiten', 'Orchester Aurora'], ['Hände hoch am Samstag', 'Die Glühbirnen'],
+      ['Neonlichter', 'Club Kobalt'], ['Einmal um die Welt', 'Paula Sonnenschein'], ['Wir sind die Band', 'Blechschaden'],
+      ['Diskokugel', 'Madame Glitzer'], ['Roter Cabriolet', 'Die Fahrlehrer'], ['Sommer ohne Ende', 'Kiesgrube'],
+      ['Nochmal von vorn', 'Die Lautsprecher'], ['Mitternachtsexpress', 'Zugvogel'], ['Kopf in den Wolken', 'Luftschloss']], 'a') },
+    d2: { name: 'Mundart & Schlager', tracks: mk([
+      ['Bim Brunne', 'Hansjörg & d Stubete'], ['Heimweh nach em See', 'Seebuebe'], ['Chli Liebi', 'Anna-Lena Frei'],
+      ['Alpenglühn', 'Die Gipfelstürmer'], ['Über d Brugg', 'Rhybögeler'], ['Herzklopfen', 'Melanie Mai'],
+      ['Füürwerch', 'D Schwarzbuebe'], ['Zwei Herzen', 'Duo Edelweiss']], 'b') },
+    d3: { name: 'Tanzfläche', tracks: mk([
+      ['Bass im Bauch', 'DJ Tannzapfen'], ['Hoch die Tassen', 'Wirbelwind'], ['Laser', 'Moonwalker'],
+      ['Ein letzter Song', 'Die Zugabe'], ['Warm Up', 'Hallenbad'], ['Tempo 128', 'Metronom'],
+      ['Nachtschicht', 'Die Frühaufsteher'], ['Konfetti', 'Papierflieger'], ['Bis zum Schluss', 'Lichtschalter']], 'c') }
+  };
+}
+function demoAdvance() {
+  const next = pending[0] || (() => { const a = allTracks(); return a[Math.floor(Math.random() * a.length)]; })();
+  player.item = Object.assign({}, next); player.progress = 0; player.fetchedAt = Date.now(); player.playing = true;
+  onTrackChange(next.uri, true); renderNow();
+}
+function demoInit() {
+  tokens = { access: 'demo', refresh: 'demo', exp: Infinity }; me = { id: 'demo', name: 'Demo' };
+  if (!Object.keys(library).length) { library = demoLibrary(); LS.set('library', library); S.playlistIds = Object.keys(library); }
+  if (!S.pin) S.pin = '1234';
+  saveS();
+  const a = allTracks(); player = { item: Object.assign({}, a[3]), progress: 12000, playing: true, fetchedAt: Date.now(), device: 'Demo', noDevice: false };
+}
+
+/* ================= Takt ================= */
+setInterval(() => {
+  updateProgress(); renderPlate();
+  if (DEMO && player.item && player.playing && currentProgress() >= player.item.dur) demoAdvance();
+  if (!adminOpen && Date.now() - lastTouch > 60000) {
+    lastTouch = Date.now();
+    if ($('#modal').hidden === false) closeModal();
+    if (!$('#pinModal').hidden) closePin();
+    if ($('#search').value || $('#gridWrap').scrollTop > 0) { $('#search').blur(); resetSearch(); }
+  }
+}, 1000);
+
+/* ================= Start ================= */
+(async function boot() {
+  if (DEMO) demoInit();
+  const res = DEMO ? null : await handleRedirect();
+  renderAll();
+  trapBack();
+  if (res && (res.legit || !S.pin)) {
+    if (res.ok) { try { await loadMe(); } catch (e) {} }
+    openAdmin(); adminMsg(res.msg, res.ok ? 'ok' : 'err');
+  } else if (!S.pin) {
+    openAdmin();
+    adminMsg('Willkommen! Richte die Jukebox Schritt für Schritt ein und tippe dann oben auf «Jukebox starten».', '');
+  }
+  if (!DEMO) pollPlayer();
+})();
+})();
+</script>
+</body>
+</html>
