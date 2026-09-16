@@ -350,6 +350,8 @@ button{font:inherit;color:inherit;cursor:pointer}
         <p class="hint" id="libInfo"></p>
         <label class="switch"><span>Gäste dürfen auf ganz Spotify suchen</span><input type="checkbox" id="allowSearch"></label>
         <label class="switch"><span>Songs mit «Explicit»-Kennzeichnung ausblenden</span><input type="checkbox" id="hideExplicit"></label>
+        <div class="row"><button class="btn" id="testSearch" type="button">Suche testen</button></div>
+        <p class="hint" id="searchInfo"></p>
       </section>
 
       <section>
@@ -494,7 +496,8 @@ async function api(method, path, opts = {}) {
   if (Date.now() < backoffUntil) throw new ApiError(429, 'Spotify-Limit');
   if (!tokens) throw new ApiError(401, 'Nicht verbunden');
   if (Date.now() > tokens.exp) await refreshToken();
-  const url = 'https://api.spotify.com/v1' + path + (opts.query ? '?' + new URLSearchParams(opts.query).toString() : '');
+  const qs = opts.query ? Object.entries(opts.query).map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&') : '';
+  const url = 'https://api.spotify.com/v1' + path + (qs ? '?' + qs : '');
   const go = () => fetch(url, { method, headers: { Authorization: 'Bearer ' + tokens.access } });
   let r;
   try { r = await go(); } catch (e) { throw new ApiError(0, 'Keine Verbindung zu Spotify. Ist das Tablet online?'); }
@@ -506,7 +509,7 @@ async function api(method, path, opts = {}) {
   }
   const text = await r.text();
   let j = null; try { j = text ? JSON.parse(text) : null; } catch (e) {}
-  if (!r.ok) throw new ApiError(r.status, (j && j.error && (j.error.reason || j.error.message)) || ('HTTP ' + r.status));
+  if (!r.ok) throw new ApiError(r.status, (j && j.error && [j.error.message, j.error.reason].filter(Boolean).join(' / ')) || ('HTTP ' + r.status));
   return j;
 }
 
@@ -684,19 +687,31 @@ async function confirmPick(t, btn) {
   }
 }
 
+let lastSearchError = '';
+async function searchTracks(q) {
+  try {
+    return await api('GET', '/search', { query: { q, type: 'track', limit: 10 } });
+  } catch (e) {
+    if (e.status === 400 || e.status === 403) return await api('GET', '/search', { query: { q, type: 'track' } });
+    throw e;
+  }
+}
+
 async function remoteSearch(q) {
   remoteQuery = q; remoteResults = null; remoteLoading = true; renderGrid();
   try {
     let items;
     if (DEMO) items = allTracks().filter(t => (t.name + ' ' + t.artists).toLowerCase().includes(q.toLowerCase().slice(0, 3)));
     else {
-      const j = await api('GET', '/search', { query: { q, type: 'track', limit: 10, market: 'from_token' } });
+      const j = await searchTracks(q);
       items = ((j.tracks && j.tracks.items) || []).filter(Boolean).map(simplify);
     }
     if (S.hideExplicit) items = items.filter(t => !t.explicit);
     if (remoteQuery === q) remoteResults = items;
   } catch (e) {
-    if (remoteQuery === q) remoteResults = { error: e.status === 429 ? 'Die Suche macht kurz Pause. Probier es in einer Minute nochmals.' : 'Die Suche hat nicht geklappt.' };
+    lastSearchError = (e.status ? 'Fehler ' + e.status + ': ' : '') + (e.message || String(e));
+    console.warn('Suche fehlgeschlagen', e);
+    if (remoteQuery === q) remoteResults = { error: e.status === 429 ? 'Die Suche macht kurz Pause. Probier es in einer Minute nochmals.' : 'Die Suche hat nicht geklappt' + (e.status ? ' (Fehler ' + e.status + ')' : '') + '.' };
   }
   remoteLoading = false; renderGrid();
 }
@@ -898,7 +913,25 @@ function fillAdmin() {
   if (document.activeElement !== $('#setSubtitle')) $('#setSubtitle').value = S.subtitle;
   $('#pinInfo').textContent = S.pin ? 'Eine PIN ist gesetzt.' : 'Noch keine PIN gesetzt. Ohne PIN lässt sich die Jukebox nicht starten.';
   renderLibInfo(); renderPlayStatus();
+  if (lastSearchError && !$('#searchInfo').textContent) { $('#searchInfo').textContent = 'Letzter Suchfehler: ' + lastSearchError; $('#searchInfo').className = 'hint status err'; }
 }
+$('#testSearch').onclick = async () => {
+  const el = $('#searchInfo');
+  if (DEMO) { el.textContent = 'Im Demo-Modus nicht nötig.'; el.className = 'hint'; return; }
+  el.textContent = 'Teste die Suche …'; el.className = 'hint';
+  try {
+    const j = await searchTracks('Queen');
+    const n = ((j && j.tracks && j.tracks.items) || []).filter(Boolean).length;
+    lastSearchError = '';
+    el.textContent = n ? 'Suche funktioniert: ' + n + ' Treffer für «Queen».' : 'Die Suche lief, hat aber nichts gefunden.';
+    el.className = 'hint status ' + (n ? 'ok' : 'err');
+  } catch (e) {
+    lastSearchError = (e.status ? 'Fehler ' + e.status + ': ' : '') + (e.message || String(e));
+    el.textContent = 'Suche fehlgeschlagen. ' + lastSearchError;
+    el.className = 'hint status err';
+  }
+};
+
 function renderLibInfo() {
   const tabs = visibleTabs();
   const total = tabs.reduce((n, id) => n + library[id].tracks.length, 0);
